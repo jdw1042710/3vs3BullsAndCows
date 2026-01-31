@@ -8,27 +8,30 @@ using UnityEngine.SceneManagement;
 using Cysharp.Threading.Tasks;
 using TMPro;
 
-public class NetworkController_UniTask : MonoBehaviour, INetworkRunnerCallbacks
+public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [SerializeField] private TextMeshProUGUI connectText;
-    [SerializeField] private Button connectButton;
-    [SerializeField] private TMP_InputField playerNameInputField;
+    [Header("View Reference")]
+    [SerializeField] private TitleView titleView;
+
+    [Header("Network Settings")]
+    [SerializeField] private NetworkPrefabRef playerPrefab;
+
+    private Dictionary<PlayerRef, NetworkObject> _spawnedCharacters = new Dictionary<PlayerRef, NetworkObject>();
 
     private NetworkRunner runner;
+    private int titleSceneIndex;
 
     private void Start()
     {
-        connectText.text = "Ready to Connect";
+        titleSceneIndex = SceneManager.GetSceneByName("Boot").buildIndex;
 
-        // UniTask 스타일의 버튼 이벤트 등록 (선택 사항)
-        // 기존처럼 Inspector에서 연결해도 되지만, 코드에서 제어하면 더 명확합니다.
-        // .Forget()은 "이 비동기 작업의 결과를 기다리지 않는다"고 명시하는 것입니다.
-        connectButton.onClick.AddListener(() => Connect().Forget());
-        connectButton.enabled = true;
+        titleView.OnConnectClicked.AddListener(() => Connect().Forget());
     }
 
-    // async void 대신 async UniTaskVoid를 사용합니다.
-    // UniTaskVoid는 Unity 이벤트(버튼 클릭 등)에서 실행되는 비동기 함수에 최적화되어 있습니다.
+    /// <summary>
+    /// 방 접속 로직
+    /// </summary>
+    /// <returns></returns>
     public async UniTaskVoid Connect()
     {
         if (runner == null)
@@ -38,8 +41,8 @@ public class NetworkController_UniTask : MonoBehaviour, INetworkRunnerCallbacks
 
         if (runner.IsRunning) return;
 
-        connectButton.enabled = false;
-        connectText.text = "Connecting...";
+        titleView.SetButtonInteractable(false);
+        titleView.UpdateStatusText("Connecting...");
 
         // Fusion의 StartGame은 표준 C# Task<T>를 반환합니다.
         // .AsUniTask()를 붙여서 UniTask로 변환하여 처리하면 Unity 라이프사이클과 더 잘 맞습니다.
@@ -49,21 +52,19 @@ public class NetworkController_UniTask : MonoBehaviour, INetworkRunnerCallbacks
             SessionName = "test",
             PlayerCount = 6,
             SceneManager = runner.GetComponent<NetworkSceneManagerDefault>() ?? runner.gameObject.AddComponent<NetworkSceneManagerDefault>(),
-
-            // Build Settings에 씬이 등록되어 있어야 합니다.
-            Scene = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/Main.unity"))
+            Scene = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/Main.unity")) // 연결 성공시 이동할 씬
         }).AsUniTask();
 
         if (result.Ok)
         {
-            connectText.text = "Success to Start Game";
+            titleView.UpdateStatusText("Success to Start Game");
             Debug.Log("Game Started Successfully");
         }
         else
         {
             // 연결 실패 시 처리
-            connectText.text = $"Fail: {result.ShutdownReason}";
-            connectButton.enabled = true;
+            titleView.SetButtonInteractable(true);
+            titleView.UpdateStatusText($"Fail: {result.ShutdownReason}");
             Debug.LogError($"Failed to Start: {result.ShutdownReason}");
         }
     }
@@ -75,22 +76,28 @@ public class NetworkController_UniTask : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (player == runner.LocalPlayer)
         {
-            connectText.text = "I Joined the Session!";
-            Debug.Log($"Local Player Joined! Name Intent: {playerNameInputField.text}");
+            titleView.UpdateStatusText("Joined the Session!");
+            Debug.Log($"Local Player Joined! Name Intent: {titleView.PlayerName}");
         }
         else
         {
-            connectText.text = $"Player {player.PlayerId} Joined";
+            titleView.UpdateStatusText($"Player {player.PlayerId} Joined");
         }
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
-        connectText.text = $"Disconnected: {shutdownReason}";
-        connectButton.enabled = true;
+        titleView.SetButtonInteractable(true);
+        titleView.UpdateStatusText($"Disconnected: {shutdownReason}");
 
         if (this.runner != null) Destroy(this.runner);
         runner = null;
+    }
+
+    public void OnSceneLoadDone(NetworkRunner runner)
+    {
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+        titleView.SetVisible(currentSceneIndex == titleSceneIndex); // Title 씬에서만 Title UI 활성화
     }
 
     // 사용하지 않는 인터페이스 구현부 (빈 상태 유지)
@@ -107,7 +114,6 @@ public class NetworkController_UniTask : MonoBehaviour, INetworkRunnerCallbacks
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, System.ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
-    public void OnSceneLoadDone(NetworkRunner runner) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
