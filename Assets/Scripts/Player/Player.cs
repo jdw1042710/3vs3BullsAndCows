@@ -13,19 +13,19 @@ public class Player : MonoBehaviour
 
     public event Action OnDeath; // 사망 시 UI 처리 등을 위해 이벤트 연결 가능
 
-    private Animator _animator;
+    private PlayerAnimator animator;
 
     private void Awake()
     {
         currentHealth = maxHealth;
-        _animator = GetComponent<Animator>();
+        animator = GetComponent<PlayerAnimator>();
         if (weapon) weapon.team = team;
     }
 
     // 시각적(애니메이션) 처리만 담당
     public void PlayAttackAnimation()
     {
-        _animator.SetTrigger("Attack");
+        animator.TriggerAttack();
         if (weapon) weapon.Attack();
     }
 
@@ -36,7 +36,7 @@ public class Player : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            _animator.SetTrigger("Death");
+            animator.TriggerDeath();
             OnDeath?.Invoke();
         }
     }

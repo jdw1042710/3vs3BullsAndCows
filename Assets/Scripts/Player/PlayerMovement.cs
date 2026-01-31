@@ -9,12 +9,12 @@ public class PlayerMovement : MonoBehaviour
     public float jumpPower = 5f;
 
     private Rigidbody rigid;
-    private Animator animator;
+    private PlayerAnimator animator;
 
     private void Awake()
     {
         rigid = GetComponent<Rigidbody>();
-        animator = GetComponent<Animator>();
+        animator = GetComponent<PlayerAnimator>();
     }
 
     /// <summary>
@@ -34,11 +34,11 @@ public class PlayerMovement : MonoBehaviour
         if (isJumping && IsGrounded())
         {
             rigid.linearVelocity = new Vector3(rigid.linearVelocity.x, jumpPower, rigid.linearVelocity.z);
-            animator.SetTrigger("Jump");
+            animator?.TriggerJump();
         }
 
         // 3. �ִϸ��̼� ����ȭ
-        UpdateAnimations(direction.x, direction.z);
+        animator?.UpdateMoveAnimation(direction.x, direction.z);
     }
 
     /// <summary>
@@ -51,13 +51,6 @@ public class PlayerMovement : MonoBehaviour
             Quaternion deltaRot = Quaternion.Euler(0, yRotation, 0);
             rigid.MoveRotation(rigid.rotation * deltaRot);
         }
-    }
-
-    private void UpdateAnimations(float h, float v)
-    {
-        animator.SetFloat("Horizontal", h, 0.1f, Time.deltaTime);
-        animator.SetFloat("Vertical", v, 0.1f, Time.deltaTime);
-        animator.SetBool("Move", h != 0 || v != 0);
     }
 
     private bool IsGrounded()
