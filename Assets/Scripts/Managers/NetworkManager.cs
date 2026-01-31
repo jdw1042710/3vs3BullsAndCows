@@ -11,22 +11,21 @@ using TMPro;
 public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     [Header("View Reference")]
-    [SerializeField] private TitleView titleView;
-
-    [Header("Network Settings")]
-    [SerializeField] private NetworkPrefabRef playerPrefab;
-
-    private Dictionary<PlayerRef, NetworkObject> _spawnedCharacters = new Dictionary<PlayerRef, NetworkObject>();
+    [SerializeField] private TitleView titleView; // todo: 이벤트 콜백 처리 하기
 
     private NetworkRunner runner;
-    private int titleSceneIndex;
 
+    private const int LOBBY_SCENE_INDEX = 0;
+    private const int GAME_SCENE_INDEX = 1;
+
+
+
+    #region Unity Life Cycle
     private void Start()
     {
-        titleSceneIndex = SceneManager.GetSceneByName("Boot").buildIndex;
-
         titleView.OnConnectClicked.AddListener(() => Connect().Forget());
     }
+    #endregion
 
     /// <summary>
     /// 방 접속 로직
@@ -44,8 +43,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         titleView.SetButtonInteractable(false);
         titleView.UpdateStatusText("Connecting...");
 
-        // Fusion의 StartGame은 표준 C# Task<T>를 반환합니다.
-        // .AsUniTask()를 붙여서 UniTask로 변환하여 처리하면 Unity 라이프사이클과 더 잘 맞습니다.
+        // 게임 시작
         var result = await runner.StartGame(new StartGameArgs()
         {
             GameMode = GameMode.AutoHostOrClient,
@@ -57,7 +55,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (result.Ok)
         {
-            titleView.UpdateStatusText("Success to Start Game");
+            titleView.UpdateStatusText("Entering...");
             Debug.Log("Game Started Successfully");
         }
         else
@@ -68,23 +66,61 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
             Debug.LogError($"Failed to Start: {result.ShutdownReason}");
         }
     }
-
-    // --- INetworkRunnerCallbacks (변경 없음) ---
-    // 콜백 메서드들은 Fusion 내부에서 호출되므로 UniTask로 변경하지 않습니다.
-
+    #region INetworkRunnerCallbacks
+    /// <summary>
+    /// 플레이어 (중도) 입장
+    /// </summary>
+    /// <param name="runner"></param>
+    /// <param name="player"></param>
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        if (player == runner.LocalPlayer)
+        if (runner.IsServer)
         {
-            titleView.UpdateStatusText("Joined the Session!");
-            Debug.Log($"Local Player Joined! Name Intent: {titleView.PlayerName}");
+            // 게임 씬이면 GameManager에게 스폰 요청
+            int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+            if (currentSceneIndex == GAME_SCENE_INDEX)
+            {           
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.SpawnPlayer(runner, player);
+                }
+            }
         }
-        else
+    }
+    // Scene 이동 시 호출됨
+    public void OnSceneLoadDone(NetworkRunner runner)
+    {
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+        titleView.SetVisible(currentSceneIndex == LOBBY_SCENE_INDEX); // Title 씬에서만 Title UI 활성화
+        if (runner.IsServer && currentSceneIndex == GAME_SCENE_INDEX)
         {
-            titleView.UpdateStatusText($"Player {player.PlayerId} Joined");
+            if (GameManager.Instance)
+            {
+                foreach (var player in runner.ActivePlayers)
+                {
+                    GameManager.Instance.SpawnPlayer(runner, player);
+                }
+            }
+        }
+
+    }
+
+    /// <summary>
+    /// 플레이어 퇴장
+    /// </summary>
+    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.DespawnPlayer(runner, player);
         }
     }
 
+    /// <summary>
+    /// 서버 종료
+    /// </summary>
+    /// <param name="runner"></param>
+    /// <param name="shutdownReason"></param>
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         titleView.SetButtonInteractable(true);
@@ -94,14 +130,10 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         runner = null;
     }
 
-    public void OnSceneLoadDone(NetworkRunner runner)
-    {
-        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        titleView.SetVisible(currentSceneIndex == titleSceneIndex); // Title 씬에서만 Title UI 활성화
-    }
 
+        
+    #region Unused
     // 사용하지 않는 인터페이스 구현부 (빈 상태 유지)
-    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
     public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnConnectedToServer(NetworkRunner runner) { }
@@ -117,4 +149,6 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnSceneLoadStart(NetworkRunner runner) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
+    #endregion
+    #endregion
 }

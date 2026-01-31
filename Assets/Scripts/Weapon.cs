@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Weapon : MonoBehaviour
 {
-    public char team;
+    public eTeamType team;
     CapsuleCollider weaponCollider;
     AudioSource audioSource;
 

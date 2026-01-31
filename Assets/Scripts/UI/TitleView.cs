@@ -21,7 +21,7 @@ public class TitleView : MonoBehaviour
         UpdateStatusText("Ready to Connect");
         SetButtonInteractable(true);
     }
-
+    
     // 상태 텍스트 갱신
     public void UpdateStatusText(string text)
     {
