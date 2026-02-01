@@ -34,7 +34,7 @@ public class TitleView : MonoBehaviour
         if (connectButton != null) connectButton.interactable = isInteractable;
     }
 
-    // 로비/게임 화면 전환 시 UI 숨김 처리 등이 필요하다면 여기에 추가
+    // UI 숨김 처리
     public void SetVisible(bool isVisible)
     {
         gameObject.SetActive(isVisible);

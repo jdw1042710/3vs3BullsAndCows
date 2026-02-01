@@ -16,7 +16,6 @@ public class SpawnPoint : MonoBehaviour
     [SerializeField] private float maxCheckDistance = 50f;
 
     [Header("Gizmo Settings")]
-    [SerializeField] private Color gizmoColor = Color.green;
     [SerializeField] private float sphereRadius = 0.3f;
 
     /// <summary>
@@ -42,7 +41,7 @@ public class SpawnPoint : MonoBehaviour
         Vector3 spawnPos = GetSpawnPosition();
 
         // 실제 스폰될 위치에 구체를 그립니다.
-        Gizmos.color = gizmoColor;
+        Gizmos.color = team switch {eTeamType.Red => Color.red, eTeamType.Blue => Color.blue, _ => Color.green };
         Gizmos.DrawSphere(spawnPos, sphereRadius);
 
         // 캐릭터가 바라볼 방향을 화살표처럼 표시합니다.

@@ -9,7 +9,7 @@ using Cysharp.Threading.Tasks;
 /// </summary>
 public class UIManager : Singleton<UIManager>
 {
-    [SerializeField] private Transform uiRoot; // Canvas Transform 연결 필요
+    [SerializeField] private Transform uiRoot;
 
     // 현재 열려있는 UI 관리
     private Dictionary<string, GameObject> activeUI = new ();
@@ -20,11 +20,11 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    public async UniTask<GameObject> OpenUIAsync(string key)
+    public async UniTask<GameObject> OpenUIAsync(string key, Transform parent)
     {
         if (activeUI.ContainsKey(key)) return activeUI[key];
 
-        var handle = StartInstantiate(key);
+        var handle = StartInstantiate(key, parent);
         await handle; // Wait
         return RegisterUI(key, handle);
     }
@@ -34,11 +34,11 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    public GameObject OpenUISync(string key)
+    public GameObject OpenUISync(string key, Transform parent)
     {
         if (activeUI.ContainsKey(key)) return activeUI[key];
 
-        var handle = StartInstantiate(key);
+        var handle = StartInstantiate(key, parent);
         handle.WaitForCompletion(); // Wait
         return RegisterUI(key, handle);
     }
@@ -70,7 +70,7 @@ public class UIManager : Singleton<UIManager>
     }
 
     #region Private Methods
-    private AsyncOperationHandle<GameObject> StartInstantiate(string key)
+    private AsyncOperationHandle<GameObject> StartInstantiate(string key, Transform parent)
     {
         // trackHandle: true로 해서 나중에 ReleaseInstance 가능하게 설정
         return Addressables.InstantiateAsync(key, uiRoot, false, true);

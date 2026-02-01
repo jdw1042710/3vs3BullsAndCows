@@ -11,13 +11,10 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private NetworkRunner runner;
 
-    private const int LOBBY_SCENE_INDEX = 0;
-    private const int GAME_SCENE_INDEX = 1;
-
     #region Unity Life Cycle
     private void Start()
     {
-        titleView = UIManager.Instance.OpenUISync("UI/TitleView.prefab").GetComponent<TitleView>();
+        titleView = UIManager.Instance.OpenUISync("UI/TitleView.prefab", transform).GetComponent<TitleView>();
         titleView.OnConnectClicked.AddListener(() => Connect().Forget());
     }
     #endregion
@@ -65,15 +62,13 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     /// <summary>
     /// 플레이어 (중도) 입장
     /// </summary>
-    /// <param name="runner"></param>
-    /// <param name="player"></param>
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         if (runner.IsServer)
         {
             // 게임 씬이면 GameManager에게 스폰 요청
             int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-            if (currentSceneIndex == GAME_SCENE_INDEX)
+            if (currentSceneIndex == SceneIndex.GAME_SCENE_INDEX)
             {           
                 if (GameManager.Instance != null)
                 {
@@ -86,8 +81,8 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnSceneLoadDone(NetworkRunner runner)
     {
         int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        titleView.SetVisible(currentSceneIndex == LOBBY_SCENE_INDEX); // Title 씬에서만 Title UI 활성화
-        if (runner.IsServer && currentSceneIndex == GAME_SCENE_INDEX)
+        titleView?.SetVisible(currentSceneIndex == SceneIndex.LOBBY_SCENE_INDEX); // Title 씬에서만 Title UI 활성화
+        if (runner.IsServer && currentSceneIndex == SceneIndex.GAME_SCENE_INDEX)
         {
             if (GameManager.Instance)
             {

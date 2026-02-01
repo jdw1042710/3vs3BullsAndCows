@@ -3,11 +3,12 @@ using Fusion;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : Singleton<GameManager>
 {
     // 플레이어 프리팹
-    private NetworkPrefabRef playerPrefab; 
+    private GameObject playerPrefab; 
 
     // 맵에 존재하는 스폰 포인트들
     private List<SpawnPoint> spawnPoints = new ();
@@ -20,12 +21,29 @@ public class GameManager : Singleton<GameManager>
     #region Unity Life Cycle
     private void Start()
     {
-        playerPrefab = ResourceManager.Instance.LoadAssetSync<GameObject>("Prefabs/Player.prefab").GetComponent<NetworkPrefabRef>();
-        // 씬 내의 모든 SpawnPoint 수집
-        spawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None).ToList();
+        playerPrefab = ResourceManager.Instance.LoadAssetSync<GameObject>("Prefabs/Player.prefab");
+#if UNITY_EDITOR
+        // NetworkObject 컴포넌트 확인
+        if (playerPrefab != null && playerPrefab.GetComponent<NetworkObject>() == null)
+        {
+            Debug.LogError("Player prefab must have a NetworkObject component!");
+        }
+#endif
     }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
     #endregion
 
+    #region Public Methods
     /// <summary>
     /// 캐릭터 생성 로직
     /// </summary>
@@ -33,25 +51,29 @@ public class GameManager : Singleton<GameManager>
     public void SpawnPlayer(NetworkRunner runner, PlayerRef player)
     {
         // 이미 스폰된 플레이어라면 중복 생성 방지
-        if (spawnedCharacters.ContainsKey(player))
+        if (spawnedCharacters.ContainsKey(player) || playerTeams.ContainsKey(player))
         {
             Debug.LogWarning($"Player {player.PlayerId} is already spawned.");
             return;
         }
 
+        if (playerPrefab == null)
+        {
+            Debug.LogError("Player prefab is not loaded!");
+            return;
+        }
+
         eTeamType team = GetBalancedTeam();
-        // 팀 정보 저장
-        playerTeams.Add(player, team);
 
         // 적절한 스폰 위치 계산
         SpawnPoint targetPoint = GetSpawnPointForTeam(team);
-        Vector3 spawnPos = targetPoint != null ? spawnPos = targetPoint.GetSpawnPosition() : Vector3.zero;
-        Quaternion spawnRot = targetPoint != null ? spawnRot = targetPoint.transform.rotation : Quaternion.identity;
+        Vector3 spawnPos = targetPoint != null ? targetPoint.GetSpawnPosition() : Vector3.zero;
+        Quaternion spawnRot = targetPoint != null ? targetPoint.transform.rotation : Quaternion.identity;
 
         // 네트워크 객체 생성 (Host만 실행해야 함)
         NetworkObject networkPlayerObject = runner.Spawn(playerPrefab, spawnPos, spawnRot, player);
         spawnedCharacters.Add(player, networkPlayerObject);
-
+        playerTeams.Add(player, team);
         Debug.Log($"[GameManager] Spawned Player {player.PlayerId} for {team}");
     }
 
@@ -72,7 +94,9 @@ public class GameManager : Singleton<GameManager>
             playerTeams.Remove(player);
         }
     }
+    #endregion
 
+    #region Private Methods
     /// <summary>
     /// 팀에 따른 스폰 포인트 찾기
     /// </summary>
@@ -109,6 +133,22 @@ public class GameManager : Singleton<GameManager>
         return redCount <= blueCount ? eTeamType.Red : eTeamType.Blue;
 
     }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if(scene.buildIndex == SceneIndex.GAME_SCENE_INDEX)
+        {
+            RegisterSpawnPoints();
+        }
+    }
+    
+    // 씬에 존재하는 모든 스폰 포인트를 찾아 등록
+    private void RegisterSpawnPoints()
+    {
+        spawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None).ToList();
+    }
+
+    #endregion
 }
 //public class GameController : MonoBehaviourPunCallbacks
 //{
