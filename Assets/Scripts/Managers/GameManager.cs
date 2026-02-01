@@ -6,9 +6,8 @@ using UnityEngine;
 
 public class GameManager : Singleton<GameManager>
 {
-
-    [Header("Network Settings")]
-    [SerializeField] private NetworkPrefabRef playerPrefab; // 플레이어 프리팹
+    // 플레이어 프리팹
+    private NetworkPrefabRef playerPrefab; 
 
     // 맵에 존재하는 스폰 포인트들
     private List<SpawnPoint> spawnPoints = new ();
@@ -19,13 +18,9 @@ public class GameManager : Singleton<GameManager>
     private Dictionary<PlayerRef, eTeamType> playerTeams = new ();
 
     #region Unity Life Cycle
-    protected override void Awake()
-    {
-        base.Awake();
-    }
-
     private void Start()
     {
+        playerPrefab = ResourceManager.Instance.LoadAssetSync<GameObject>("Prefabs/Player.prefab").GetComponent<NetworkPrefabRef>();
         // 씬 내의 모든 SpawnPoint 수집
         spawnPoints = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None).ToList();
     }
@@ -37,8 +32,6 @@ public class GameManager : Singleton<GameManager>
     /// <param name="team">속한 팀</param>
     public void SpawnPlayer(NetworkRunner runner, PlayerRef player)
     {
-
-
         // 이미 스폰된 플레이어라면 중복 생성 방지
         if (spawnedCharacters.ContainsKey(player))
         {

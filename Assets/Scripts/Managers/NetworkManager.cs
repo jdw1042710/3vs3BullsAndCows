@@ -1,28 +1,23 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine.SceneManagement;
 using Cysharp.Threading.Tasks;
-using TMPro;
 
 public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [Header("View Reference")]
-    [SerializeField] private TitleView titleView; // todo: 이벤트 콜백 처리 하기
+    private TitleView titleView; // todo: 이벤트 콜백 처리 하기
 
     private NetworkRunner runner;
 
     private const int LOBBY_SCENE_INDEX = 0;
     private const int GAME_SCENE_INDEX = 1;
 
-
-
     #region Unity Life Cycle
     private void Start()
     {
+        titleView = UIManager.Instance.OpenUISync("UI/TitleView.prefab").GetComponent<TitleView>();
         titleView.OnConnectClicked.AddListener(() => Connect().Forget());
     }
     #endregion
