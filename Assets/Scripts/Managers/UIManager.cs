@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// UI 팝업, 패널 등을 생성하고 관리하는 매니저
@@ -17,7 +17,7 @@ public class UIManager : Singleton<UIManager>
     /// <summary>
     /// UI 로드 및 인스턴스화
     /// </summary>
-    public async Task<GameObject> OpenUIAsync(string key)
+    public async UniTask<GameObject> OpenUIAsync(string key)
     {
         // 이미 열려있는지 확인 (캐싱)
         if (activeUI.ContainsKey(key))

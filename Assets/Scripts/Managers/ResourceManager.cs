@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// 일반적인 에셋(ScriptableObject, Texture, Audio, Prefab 원본 등)을 로드하는 매니저
@@ -15,7 +15,7 @@ public class ResourceManager : Singleton<ResourceManager>
     /// <summary>
     /// 에셋 비동기 로드 (캐싱 로직 적용)
     /// </summary>
-    public async Task<T> LoadAssetAsync<T>(string key) where T : Object
+    public async UniTask<T> LoadAssetAsync<T>(string key) where T : Object
     {
         // 이미 로드된 리소스인지 확인
         if (loadedHandles.ContainsKey(key))
