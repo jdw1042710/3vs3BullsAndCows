@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
     public bool IsNetworkControlled { get; set; } = false;
 
     // 사용자 입력값
-    public Vector3 InputMoveDir; // { get; private set; }
+    public Vector3 InputMoveDir { get; private set; }
     public float InputLookX { get; private set; }
     public float InputLookY { get; private set; }
     public bool InputJump { get; private set; }
@@ -27,13 +27,13 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        InputLookX = Input.GetAxisRaw("Mouse X") * cameraHandler.LookSensitivity;
-        InputLookY = Input.GetAxisRaw("Mouse Y") * cameraHandler.LookSensitivity;
-
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
         InputMoveDir = new Vector3(h, 0, v);
-
+        InputLookX = Input.GetAxisRaw("Mouse X") * cameraHandler.LookSensitivity.x;
+        InputLookY = Input.GetAxisRaw("Mouse Y") * cameraHandler.LookSensitivity.y;
+        InputJump = Input.GetKeyDown(KeyCode.Space);
+        InputAttack = Input.GetMouseButtonDown(0);
         // 로컬에서만 처리함 (네트워크 처리 필요 X)
         if (cameraHandler != null)
         {
@@ -52,7 +52,7 @@ public class PlayerController : MonoBehaviour
             movement.ProcessRotation(InputLookX);
         }
 
-        if (Input.GetButtonDown("Fire1") && player != null)
+        if (InputAttack && player != null)
         {
             player.PlayAttackAnimation();
         }

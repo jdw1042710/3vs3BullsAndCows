@@ -296,10 +296,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    - target: {fileID: 3714414409979644396, guid: 0013b87972c8349248da36b949d3b704, type: 3}
-      propertyPath: clamp
-      value: 30
-      objectReference: {fileID: 0}
     - target: {fileID: 4952870447539027734, guid: 0013b87972c8349248da36b949d3b704, type: 3}
       propertyPath: m_Enabled
       value: 0

@@ -1231,6 +1231,7 @@ GameObject:
   - component: {fileID: 2122733095874881278}
   - component: {fileID: 6724168391396805555}
   - component: {fileID: 3272541533391050218}
+  - component: {fileID: 358929742671442029}
   - component: {fileID: 5738835074540988940}
   - component: {fileID: 4952870447539027734}
   - component: {fileID: 5791466654553582897}
@@ -1487,7 +1488,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d876e2a9abd4c4647a286993492e34d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  lookSensitivity: 2
+  InputMoveDir: {x: 0, y: 0, z: 0}
+--- !u!114 &358929742671442029
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3109045270886559616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb09ad640e0205e4ba01c6e2c1cb8e25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimator
 --- !u!114 &5738835074540988940
 MonoBehaviour:
   m_ObjectHideFlags: 0

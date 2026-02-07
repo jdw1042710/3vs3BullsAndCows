@@ -50,6 +50,7 @@ public class PlayerMovement : MonoBehaviour
     #region Private Methods
     private bool IsGrounded()
     {
+        Debug.DrawRay(transform.position + Vector3.up * 0.1f, Vector3.down * 0.3f, Color.red);
         return Physics.Raycast(transform.position + Vector3.up * 0.1f, Vector3.down, 0.3f);
     }
     #endregion

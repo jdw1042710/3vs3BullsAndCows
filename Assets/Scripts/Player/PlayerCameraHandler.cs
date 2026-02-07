@@ -10,11 +10,11 @@ public class PlayerCameraHandler : MonoBehaviour
     [SerializeField] private Transform cameraTarget;
 
     [Header("Look Settings")]
-    [SerializeField] private float lookSensitivity = 2f;
+    [SerializeField] private Vector2 lookSensitivity = new Vector2(4, 2);
     [SerializeField] private float clamp = 30.0f;    // 상하 시야각 제한
     [SerializeField] private float distance = 2f;
 
-    public float LookSensitivity { get => lookSensitivity; }
+    public Vector2 LookSensitivity { get => lookSensitivity; }
 
     private float targetPitch = 0;
 
@@ -55,7 +55,7 @@ public class PlayerCameraHandler : MonoBehaviour
     {
         if (cameraTarget == null) return;
 
-        targetPitch -= inputY * lookSensitivity;
+        targetPitch -= inputY * lookSensitivity.y;
 
         // 각도 제한 (목 꺾임 방지)
         targetPitch = ClampAngle(targetPitch, -clamp, clamp);

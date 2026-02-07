@@ -5,11 +5,13 @@ using Fusion.Sockets;
 using UnityEngine.SceneManagement;
 using Cysharp.Threading.Tasks;
 
-public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
+public class NetworkManager : Singleton<NetworkManager>, INetworkRunnerCallbacks
 {
     private TitleView titleView; // todo: 이벤트 콜백 처리 하기
 
     private NetworkRunner runner;
+
+    private PlayerNetwork localPlayer;
 
     #region Unity Life Cycle
     private void Start()
@@ -19,6 +21,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     }
     #endregion
 
+    #region Network Logic
     /// <summary>
     /// 방 접속 로직
     /// </summary>
@@ -32,8 +35,13 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (runner.IsRunning) return;
 
-        titleView.SetButtonInteractable(false);
-        titleView.UpdateStatusText("Connecting...");
+        if(titleView)
+        {
+            titleView.SetButtonInteractable(false);
+            titleView.UpdateStatusText("Connecting...");
+        }
+        var sceneManager = runner.GetComponent<NetworkSceneManagerDefault>()
+            ?? runner.gameObject.AddComponent<NetworkSceneManagerDefault>();
 
         // 게임 시작
         var result = await runner.StartGame(new StartGameArgs()
@@ -41,7 +49,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
             GameMode = GameMode.AutoHostOrClient,
             SessionName = "test",
             PlayerCount = 6,
-            SceneManager = runner.GetComponent<NetworkSceneManagerDefault>() ?? runner.gameObject.AddComponent<NetworkSceneManagerDefault>(),
+            SceneManager = sceneManager,
             Scene = SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath("Assets/Scenes/Main.unity")) // 연결 성공시 이동할 씬
         }).AsUniTask();
 
@@ -58,6 +66,12 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
             Debug.LogError($"Failed to Start: {result.ShutdownReason}");
         }
     }
+
+    public void SetLocalPlayer(PlayerNetwork player)
+    {
+        localPlayer = player;
+    }
+
     #region INetworkRunnerCallbacks
     /// <summary>
     /// 플레이어 (중도) 입장
@@ -120,11 +134,16 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         runner = null;
     }
 
+    public void OnInput(NetworkRunner runner, NetworkInput input) 
+    {
+        if (localPlayer != null)
+        {
+            input.Set(localPlayer.GetLocalInput());
+        }
+    }
 
-        
     #region Unused
     // 사용하지 않는 인터페이스 구현부 (빈 상태 유지)
-    public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnConnectedToServer(NetworkRunner runner) { }
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
@@ -139,6 +158,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnSceneLoadStart(NetworkRunner runner) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
+    #endregion
     #endregion
     #endregion
 }

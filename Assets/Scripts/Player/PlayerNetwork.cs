@@ -48,7 +48,7 @@ public class PlayerNetwork : NetworkBehaviour
         // [Client] 내 캐릭터라면
         if (HasInputAuthority)
         {
-            // Controller가 존재하면 네트워크 제어 모드임을 알림 (직접 이동 방지)
+            // Controller의 네트워크 제어 모드 활성화 (직접 이동 방지)
             if (controller != null)
             {
                 controller.enabled = true;
@@ -60,6 +60,8 @@ public class PlayerNetwork : NetworkBehaviour
             {
                 cameraHandler.LinkCinemachine();
             }
+
+            NetworkManager.Instance?.SetLocalPlayer(this);
         }
     }
 
