@@ -1297,6 +1297,7 @@ MonoBehaviour:
   lookSensitivity: 2
   clamp: 30
   distance: 2
+  initializedWithoutNetwork: 0
 --- !u!136 &9096642234393888506
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1504,7 +1505,6 @@ MonoBehaviour:
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 3714414409979644396}
   - {fileID: 4952870447539027734}
   - {fileID: 5791466654553582897}
   ForceRemoteRenderTimeframe: 0

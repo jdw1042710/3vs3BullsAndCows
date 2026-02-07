@@ -300,9 +300,21 @@ PrefabInstance:
       propertyPath: clamp
       value: 30
       objectReference: {fileID: 0}
+    - target: {fileID: 4952870447539027734, guid: 0013b87972c8349248da36b949d3b704, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5738835074540988940, guid: 0013b87972c8349248da36b949d3b704, type: 3}
       propertyPath: SortKey
       value: 1398149021
+      objectReference: {fileID: 0}
+    - target: {fileID: 5738835074540988940, guid: 0013b87972c8349248da36b949d3b704, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5791466654553582897, guid: 0013b87972c8349248da36b949d3b704, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

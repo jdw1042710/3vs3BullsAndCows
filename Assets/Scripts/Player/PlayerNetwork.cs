@@ -2,65 +2,85 @@ using Fusion;
 using Fusion.Addons.Physics;
 using UnityEngine;
 
+public enum InputButton
+{
+    Jump = 0,
+    Attack = 1,
+    Interact = 2
+}
+
+public struct NetworkInputData : INetworkInput
+{
+    public Vector3 moveDirection;
+    public float lookRotationY;
+    public NetworkButtons buttons;
+}
+
 [RequireComponent(typeof(NetworkRigidbody3D))]
 [RequireComponent(typeof(NetworkObject))]
 public class PlayerNetwork : NetworkBehaviour
 {
-    // 로컬 컴포넌트 참조
     private Player player;
     private PlayerMovement movement;
     private PlayerController controller;
+    private PlayerCameraHandler cameraHandler;
 
-    // [Networked] 변수: 값이 변하면 모든 클라이언트에 자동 동기화됨
     [Networked] public int NetworkHealth { get; set; }
     [Networked] public NetworkButtons PreviousButtons { get; set; }
 
-    // 체력 변경 감지용 (UI 업데이트 등)
     private ChangeDetector changes;
 
     public override void Spawned()
     {
         player = GetComponent<Player>();
         movement = GetComponent<PlayerMovement>();
-        controller = GetComponent<PlayerController>(); // 로컬 플레이어만 있음
+        controller = GetComponent<PlayerController>();
+        cameraHandler = GetComponent<PlayerCameraHandler>();
+
         changes = GetChangeDetector(ChangeDetector.Source.SimulationState);
 
+        // [Server]
         if (HasStateAuthority)
         {
             NetworkHealth = player.maxHealth;
         }
 
-        // 내 캐릭터라면 카메라 활성화 등 Controller 초기화
-        if (HasInputAuthority && controller != null)
+        // [Client] 내 캐릭터라면
+        if (HasInputAuthority)
         {
-            controller.enabled = true;
+            // Controller가 존재하면 네트워크 제어 모드임을 알림 (직접 이동 방지)
+            if (controller != null)
+            {
+                controller.enabled = true;
+                controller.IsNetworkControlled = true;
+            }
+
+            // 카메라 강제 연결 (재접속이나 스폰 시점 문제 해결)
+            if (cameraHandler != null)
+            {
+                cameraHandler.LinkCinemachine();
+            }
         }
     }
 
-    // Fusion의 물리/로직 루프
     public override void FixedUpdateNetwork()
     {
         if (GetInput(out NetworkInputData data))
         {
-            // 1. 이동 처리
             movement.ProcessMovement(data.moveDirection, data.buttons.IsSet(InputButton.Jump));
             movement.ProcessRotation(data.lookRotationY);
-
-            // 2. 공격 처리 (버튼이 눌린 순간 감지)
-            // [수정] Runner.InputPrevious 대신 내 변수(PreviousButtons) 사용
+            
             if (data.buttons.WasPressed(PreviousButtons, InputButton.Attack))
             {
                 RPC_Attack();
             }
 
-            // [중요] 처리가 끝난 후 현재 버튼 상태를 '이전 상태'로 저장
             PreviousButtons = data.buttons;
         }
     }
 
     public override void Render()
     {
-        // NetworkHealth 변경 감지 -> Player(Model) 업데이트
         foreach (var change in changes.DetectChanges(this))
         {
             if (change == nameof(NetworkHealth))
@@ -70,19 +90,32 @@ public class PlayerNetwork : NetworkBehaviour
         }
     }
 
-    // 공격 시각 효과 동기화
     [Rpc(RpcSources.InputAuthority | RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_Attack()
     {
         player.PlayAttackAnimation();
     }
 
-    // 피격 처리 (충돌 감지는 서버에서 수행한다고 가정)
     public void TakeDamage(int damage)
     {
         if (HasStateAuthority)
         {
             NetworkHealth -= damage;
         }
+    }
+
+    // [참고] 외부(InputManager/Spawner)에서 OnInput 호출 시 사용할 헬퍼 메소드
+    public NetworkInputData GetLocalInput()
+    {
+        if (controller == null) return default;
+
+        NetworkInputData data = new NetworkInputData();
+        data.moveDirection = controller.InputMoveDir;
+        data.lookRotationY = controller.InputLookX; // 마우스 X는 캐릭터 회전(Yaw)
+
+        data.buttons.Set(InputButton.Jump, controller.InputJump);
+        data.buttons.Set(InputButton.Attack, controller.InputAttack);
+
+        return data;
     }
 }

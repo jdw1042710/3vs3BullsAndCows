@@ -1,10 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
-using Fusion;
 using Unity.Cinemachine;
 using UnityEngine;
 
-public class PlayerCameraHandler : NetworkBehaviour
+public class PlayerCameraHandler : MonoBehaviour
 {
     [Header("Camera Settings")]
     [Tooltip("카메라가 쳐다볼 오프셋 트랜스폼")]
@@ -15,6 +14,8 @@ public class PlayerCameraHandler : NetworkBehaviour
     [SerializeField] private float clamp = 30.0f;    // 상하 시야각 제한
     [SerializeField] private float distance = 2f;
 
+    public float LookSensitivity { get => lookSensitivity; }
+
     private float targetPitch = 0;
 
     [Header("Debug")]
@@ -24,29 +25,17 @@ public class PlayerCameraHandler : NetworkBehaviour
     private void Awake()
     {
         if (cameraTarget == null)
-            Log.Error("There is no target camera transform");
+            Debug.LogError("There is no target camera transform");
     }
 
     private void Start()
     {
-        if(initializedWithoutNetwork)
-            LinkCinemachine();
+        LinkCinemachine();
     }
 
     #endregion
-
-    #region Fusion
-    public override void Spawned() // 네트워크 관련 클래스들 별도로 분리하기
-    {
-        if (HasInputAuthority)
-        {
-            LinkCinemachine();
-        }
-    }
-
-    #endregion
-
-    private void LinkCinemachine()
+    #region Initialize
+    public void LinkCinemachine()
     {
         var cam = FindAnyObjectByType<CinemachineCamera>();
         if (cam != null)
@@ -57,7 +46,7 @@ public class PlayerCameraHandler : NetworkBehaviour
             
         }
     }
-
+    #endregion
     #region Movement
     /// <summary>
     /// PlayerController에서 호출: 마우스 입력을 받아 카메라 타겟을 회전시킴
