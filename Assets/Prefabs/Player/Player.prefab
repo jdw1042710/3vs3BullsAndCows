@@ -1256,6 +1256,7 @@ Transform:
   m_Children:
   - {fileID: 1993851024164929998}
   - {fileID: 6258812845127682349}
+  - {fileID: 3881337065960401895}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &8542889012975677248
@@ -1292,10 +1293,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f403ac34d7d7c4e8191c69ccbd1ab817, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cameraTarget: {fileID: 3881337065960401895}
+  lookSensitivity: 2
+  clamp: 30
   distance: 2
-  height: 2
-  centerOffset: {x: 0, y: 1, z: 0}
-  followOnStart: 0
 --- !u!136 &9096642234393888506
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1503,6 +1504,7 @@ MonoBehaviour:
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
+  - {fileID: 3714414409979644396}
   - {fileID: 4952870447539027734}
   - {fileID: 5791466654553582897}
   ForceRemoteRenderTimeframe: 0
@@ -2370,6 +2372,37 @@ Transform:
   m_Children:
   - {fileID: 4910246929836647065}
   m_Father: {fileID: 4676970003987866206}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6251054621267869886
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3881337065960401895}
+  m_Layer: 0
+  m_Name: CameraTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3881337065960401895
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6251054621267869886}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2336907094814192954}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6323971752440721165
 GameObject:

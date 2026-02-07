@@ -9,11 +9,25 @@ public class PlayerController : MonoBehaviour
     // 현재 프레임의 입력 데이터 (Network가 가져감)
     public NetworkInputData CurrentInputData;
 
+    private PlayerCameraHandler cameraHandler;
+
+    private void Start()
+    {
+        if (cameraHandler == null)
+            cameraHandler = GetComponent<PlayerCameraHandler>();
+    }
+
     private void Update()
     {
         // 1. 마우스 회전 (이건 로컬에서 즉시 반영해도 되고, 네트워크로 보내도 됨)
         // 여기서는 네트워크로 보내서 동기화하는 방식을 택함
         float mouseX = Input.GetAxisRaw("Mouse X") * lookSensitivity;
+        float mouseY = Input.GetAxisRaw("Mouse Y") * lookSensitivity;
+
+        if (cameraHandler != null)
+        {
+            cameraHandler.ProcessLookInput(mouseY);
+        }
 
         // 2. 키보드 이동
         float h = Input.GetAxisRaw("Horizontal");
